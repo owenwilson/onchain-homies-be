@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
+import bodyParser from 'body-parser';
 import { Server } from 'socket.io';
 import { AgentManager } from './agents/AgentManager';
 import taskRoutes from './api/tasks';
@@ -11,13 +12,18 @@ const agentManager = AgentManager.getInstance();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { origin: "http://localhost:5173", credentials: true }
+    cors: {
+        origin: ["http://localhost:3001"],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
 });
 
 initSocket(io);
 
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json({ type: 'application/*+json' }))
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -38,7 +44,8 @@ app.use('/api/tasks', taskRoutes);
 
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+server.listen(Number(PORT), '0.0.0.0', () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`📡 Socket.io path: /socket.io/`);
     console.log('🤖 Agents loaded:', agentManager.getAgents().map(a => a.name));
 });
