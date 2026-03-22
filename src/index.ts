@@ -5,6 +5,9 @@ import { Server } from 'socket.io';
 import { AgentManager } from './agents/AgentManager';
 import taskRoutes from './api/tasks';
 import { initSocket } from './socket';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // const agentManager = new AgentManager();
 const agentManager = AgentManager.getInstance();
