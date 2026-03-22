@@ -24,3 +24,10 @@ export const emitAgentState = (agentId: string, state: string, details?: any) =>
         console.log('⚠️ WebSocket not initialized');
     }
 };
+
+// progreso del agente
+export const emitAgentProgress = (agentId: string, step: string, progress: number) => {
+    if (io) {
+        io.emit('agent-progress', { agentId, step, progress, timestamp: Date.now() });
+    }
+};

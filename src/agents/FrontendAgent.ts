@@ -1,4 +1,9 @@
 import { BaseAgent, Task } from './BaseAgent';
+import { executeClaudeTask } from '../services/claudeService';
+import { emitAgentState } from '../socket';
+import fs from 'fs';
+import path from 'path';
+
 
 export class FrontendAgent extends BaseAgent {
     constructor(name: string, privateKey?: string) {
@@ -9,10 +14,31 @@ export class FrontendAgent extends BaseAgent {
         // Simular generación de código React
         const componentName = task.params.componentName || 'Button';
 
+        emitAgentState(this.id, 'working', {
+            step: 'Generating code with Claude AI',
+            progress: 30
+        });
+
+        const zipBuffer = await executeClaudeTask({
+            description: task.params.description,
+            framework: task.params.framework || 'react',
+            requirements: task.params.requirements || []
+        });
+
+        emitAgentState(this.id, 'working', {
+            step: 'Code generated, preparing delivery',
+            progress: 80
+        });
+
+        // Guardar ZIP temporalmente
+        const zipPath = path.join(process.cwd(), 'temp', `${this.id}-${Date.now()}.zip`);
+        fs.writeFileSync(zipPath, zipBuffer);
+
         return {
-            code: `import React from 'react';\n\nconst ${componentName} = () => {\n  return <button className="px-4 py-2 bg-blue-500 text-white rounded">\n    ${componentName}\n  </button>;\n};\n\nexport default ${componentName};`,
-            lines: 8,
-            framework: 'react'
+            success: true,
+            downloadUrl: `/api/download/${path.basename(zipPath)}`,
+            filesCount: zipBuffer.length,
+            framework: task.params.framework
         };
     }
 }
